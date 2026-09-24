@@ -26,7 +26,17 @@ def get_cars():
 
     return cars
 
-def search_cars():
-    ...
-
+def search_cars_brand(brand=None):
+    conn = sqlite3.connect('cars.db')
+    c = conn.cursor()
+    if brand is not None:
+        c.execute("SELECT * FROM cars WHERE brand = ?", (brand,))
+    else:
+        c.execute("SELECT * FROM cars")
+    cars = c.fetchall()
+    conn.close()
+    return cars
+    
+if __name__ == "__main__":
+    pass
 
