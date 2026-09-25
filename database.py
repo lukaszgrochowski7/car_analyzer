@@ -25,18 +25,47 @@ def get_cars():
     conn.close()
 
     return cars
-
-def search_cars_brand(brand=None):
-    conn = sqlite3.connect('cars.db')
-    c = conn.cursor()
+    
+def find_car(brand=None,
+            min_price=None,
+            max_price=None,
+            min_mileage=None,
+            max_mileage=None,
+            min_year=None,
+            max_year=None,
+            ):
+    parameters = []
+    conditions = [] 
     if brand is not None:
-        c.execute("SELECT * FROM cars WHERE brand = ?", (brand,))
-    else:
-        c.execute("SELECT * FROM cars")
+        conditions.append("brand = ?")
+        parameters.append(brand)
+    if min_price is not None:
+        conditions.append("price > ?")
+        parameters.append(min_price)
+    if max_price is not None:
+        conditions.append("price < ?")
+        parameters.append(max_price)
+    if min_mileage is not None:
+        conditions.append("mileage > ?")
+        parameters.append(min_mileage)
+    if max_mileage is not None:
+        conditions.append("mileage < ?")
+        parameters.append(max_mileage)
+    if min_year is not None:
+        conditions.append("make_year > ?")
+        parameters.append(min_year)
+    if max_year is not None:
+        conditions.append("make_year < ?")
+        parameters.append(max_year)
+    conn = sqlite3.connect("cars.db")
+    c = conn.cursor()
+    query = "SELECT * FROM cars"
+    if conditions:
+        query += " WHERE " + " AND ".join(conditions)
+    c.execute(query,tuple(parameters))
     cars = c.fetchall()
     conn.close()
-    return cars
-    
+    return cars 
 if __name__ == "__main__":
     pass
 
