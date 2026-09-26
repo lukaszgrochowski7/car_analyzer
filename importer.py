@@ -1,49 +1,65 @@
 import csv
 import sqlite3
+
 def create_table():
     conn = sqlite3.connect('cars.db')
     c = conn.cursor()
     c.execute("""
         CREATE TABLE IF NOT EXISTS cars (
-        "id" INTEGER PRIMARY KEY,
-        "brand" TEXT NOT NULL,
-        "model" TEXT NOT NULL,
-        "transmission" TEXT NOT NULL,
-        "make_year" INT,
-        "fuel_type" TEXT,
-        "engine_capacity" INT,
-        "mileage" INT,
-        "price" INT
-        
-        
+            "id" INTEGER PRIMARY KEY,
+            "brand" TEXT NOT NULL,
+            "model" TEXT NOT NULL,
+            "transmission" TEXT NOT NULL,
+            "year" INT,
+            "fuel_type" TEXT,
+            "mileage" INT,
+            "price_usd" INT
         );
-
     """)
     conn.commit()
     conn.close()
-def add_data(brand,model,transmission,make_year,fuel_type,engine_capacity,mileage,price):
+
+def to_int(value):
+    try:
+        return int(value)
+    except (ValueError, TypeError):
+        return None
+
+def data():
     conn = sqlite3.connect('cars.db')
     c = conn.cursor()
-    c.execute("""
-        INSERT INTO "cars" (brand,model,transmission,make_year,fuel_type,engine_capacity,mileage,price)
-        VALUES(?,?,?,?,?,?,?,?)
-        """,(brand,model,transmission,make_year,fuel_type,engine_capacity,mileage,price))
-    conn.commit()
-    conn.close()
-def data():
-    with open("pre-ownedcars.csv","r",newline="",encoding="utf-8") as file:
+
+    with open("used_cars_10M_2025.csv", "r", newline="", encoding="utf-8") as file:
         reader = csv.DictReader(file)
+        batch = []
+
         for wiersz in reader:
-            add_data(
+            batch.append((
                 wiersz["brand"],
                 wiersz["model"],
                 wiersz["transmission"],
-                wiersz["make_year"],
+                to_int(wiersz["year"]),
                 wiersz["fuel_type"],
-                wiersz["engine_capacity"],
-                wiersz["mileage"],
-                wiersz["price"]
-            )
+                to_int(wiersz["mileage_km"]),
+                to_int(wiersz["price_usd"])
+            ))
+
+            if len(batch) >= 10000:
+                c.executemany("""
+                    INSERT INTO cars (brand,model,transmission,year,fuel_type,mileage,price_usd)
+                    VALUES(?,?,?,?,?,?,?)
+                """, batch)
+                conn.commit()
+                batch.clear()
+
+        if batch:
+            c.executemany("""
+                INSERT INTO cars (brand,model,transmission,year,fuel_type,mileage,price_usd)
+                VALUES(?,?,?,?,?,?,?)
+            """, batch)
+            conn.commit()
+
+    conn.close()
 
 if __name__ == "__main__":
     create_table()
