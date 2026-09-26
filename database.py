@@ -33,17 +33,21 @@ def find_car(brand=None,
             max_mileage=None,
             min_year=None,
             max_year=None,
+            by=None,
+            order=None
             ):
     parameters = []
     conditions = [] 
+    parameters_by = ""
+    parameters_order = ""
     if brand is not None:
         conditions.append("brand = ?")
         parameters.append(brand)
     if min_price is not None:
-        conditions.append("price > ?")
+        conditions.append("price_usd > ?")
         parameters.append(min_price)
     if max_price is not None:
-        conditions.append("price < ?")
+        conditions.append("price_usd < ?")
         parameters.append(max_price)
     if min_mileage is not None:
         conditions.append("mileage > ?")
@@ -52,16 +56,31 @@ def find_car(brand=None,
         conditions.append("mileage < ?")
         parameters.append(max_mileage)
     if min_year is not None:
-        conditions.append("make_year > ?")
+        conditions.append("year > ?")
         parameters.append(min_year)
     if max_year is not None:
-        conditions.append("make_year < ?")
+        conditions.append("year < ?")
         parameters.append(max_year)
+    if by is not None:
+        if by not in ["brand", "model", "transmission", "year", "fuel_type", "mileage", "price_usd"]:
+            raise ValueError("Invalid 'by' parameter. Must be one of: brand, model, transmission, year, fuel_type, mileage, price_usd")
+        else:
+            parameters_by = by
+    if order is not None:
+        if order not in ["ASC", "DESC"]:
+            raise ValueError("Invalid 'order' parameter. Must be either 'ASC' or 'DESC'")
+        else:
+            parameters_order = order
     conn = sqlite3.connect("cars.db")
     c = conn.cursor()
     query = "SELECT * FROM cars"
     if conditions:
         query += " WHERE " + " AND ".join(conditions)
+    if parameters_by:
+        query += f" ORDER BY {parameters_by}"
+        if parameters_order:
+            query += f" {parameters_order}"
+        #todo przypadek gdy mamy by ale nie mamy order
     c.execute(query,tuple(parameters))
     cars = c.fetchall()
     conn.close()
