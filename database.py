@@ -27,6 +27,8 @@ def get_cars():
     return cars
     
 def find_car(brand=None,
+            model=None,
+            transmission=None,
             min_price=None,
             max_price=None,
             min_mileage=None,
@@ -43,6 +45,12 @@ def find_car(brand=None,
     if brand is not None:
         conditions.append("brand = ?")
         parameters.append(brand)
+    if model is not None:
+        conditions.append("model = ?")
+        parameters.append(model)
+    if transmission is not None:
+        conditions.append("transmission = ?")
+        parameters.append(transmission)
     if min_price is not None:
         conditions.append("price_usd > ?")
         parameters.append(min_price)
